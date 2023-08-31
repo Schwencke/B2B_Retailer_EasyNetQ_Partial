@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using EasyNetQ;
+﻿using EasyNetQ;
 using Messages;
 
 namespace Warehouse
@@ -25,7 +22,7 @@ namespace Warehouse
             using (bus = RabbitHutch.CreateBus("host=localhost;persistentMessages=false"))
             {
                 // Listen for order request messages.
-                bus.PubSub.Subscribe<OrderRequestMessage>("warehouse" + id.ToString(), 
+                bus.PubSub.Subscribe<OrderRequestMessage>("warehouse" + id.ToString(),
                     HandleOrderRequestMessage);
 
                 lock (this)
@@ -43,7 +40,7 @@ namespace Warehouse
         {
             lock (this)
             {
-                Console.WriteLine("Warehouse " + id + ": Order request received for order " 
+                Console.WriteLine("Warehouse " + id + ": Order request received for order "
                     + message.OrderId + ".");
             }
 
@@ -69,7 +66,7 @@ namespace Warehouse
 
                 lock (this)
                 {
-                    Console.WriteLine("Warehouse " + id + ": Reply for order " + 
+                    Console.WriteLine("Warehouse " + id + ": Reply for order " +
                     message.OrderId + " sent back to retailer.");
                 }
             }

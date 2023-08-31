@@ -15,11 +15,13 @@ using (bus = RabbitHutch.CreateBus("host=localhost;persistentMessages=false"))
     Console.WriteLine("Retailer is running.");
 
     // Listen for order request messages from customers
-    bus.SendReceive.Receive<OrderRequestMessage>("customerToRetailerQueue", 
+    bus.SendReceive.Receive<OrderRequestMessage>("customerToRetailerQueue",
         message => HandleOrderRequest(message));
 
     // Listen for order reply messages from warehouses (use a point-to-point channel).
     // WRITE CODE HERE!
+    bus.SendReceive.Receive<OrderReplyMessage>("warehouseToRetailerQueue",
+        message => HandleOrderReply(message));
 
     // Block this thread so that the retailer program will not exit.
     Console.ReadLine();
@@ -32,6 +34,7 @@ void HandleOrderRequest(OrderRequestMessage message)
 
     // Send an order request message to all warehouses (publish-subscribe channel).
     // WRITE CODE HERE!
+    bus.PubSub.Publish(message);
 
     lock (lockObject)
     {
@@ -43,7 +46,7 @@ void HandleOrderRequest(OrderRequestMessage message)
     // (Timeout_Elapsed) will process the replies from warehouses and reply
     // to the customer who created the order request.
     // Beware that a timer runs in a separate thread.
-    Timer timer = new Timer(Timeout_Elapsed, message, timeoutInterval, 
+    Timer timer = new Timer(Timeout_Elapsed, message, timeoutInterval,
         Timeout.Infinite);
 }
 
@@ -72,7 +75,7 @@ void Timeout_Elapsed(object message)
         if (repliesForThisOrder.Count > 0)
         {
             // Get a reply from a local warehouse (DaysForDelivery == 2) if possible.
-            var reply = 
+            var reply =
                 repliesForThisOrder.FirstOrDefault(r => r.DaysForDelivery == 2);
             if (reply == null)
             {
